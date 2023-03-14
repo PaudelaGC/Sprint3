@@ -17,6 +17,8 @@ const reverseText = str =>
         .reverse()
         .join("");
 
+//Exercici preparat per llegir i escriure un unic fitxer de text
+
 // Read and reverse contents of text files in a directory
 /*readdir(inbox, (error, files) => {
   if (error) return console.log("Error: Folder inaccessible");
@@ -31,39 +33,43 @@ const reverseText = str =>
   });
 });*/
 
-function readDirectory(inbox) {
+async function readDirectory(inbox) {
     return new Promise((resolve, reject) => {
-        readdir(inbox, (error, files) => {
+        readdir(inbox, (error, file) => {
             if (error) reject(new Error("Error: Folder inaccessible"))
-            else resolve(files)
+            else resolve(file)
         })
     })
 }
 
 function readDataFromFile(file) {
     return new Promise((resolve, reject) => {
-        readFile(join(inbox, file), "utf8", (error, data) => {
+        if (file[0] === undefined) reject(new Error("Error: File error"))
+        readFile(join(inbox, file[0]), "utf8", (error, data) => {
             if (error) reject(new Error("Error: File error"))
-            else resolve(file, data)
+            resolve(data)
         })
     })
 }
 
 function writeDataFromInbox(file, data) {
     return new Promise((resolve, reject) => {
-        writeFile(join(outbox, file), reverseText(data), error => {
+        writeFile(join(outbox, file[0]), reverseText(data), error => {
             if (error) reject(new Error("Error: File could not be saved!"))
-            else resolve(console.log(`${file} was successfully saved in the outbox!`));
+            else resolve(`${file[0]} was successfully saved in the outbox!`);
         })
     })
 }
 
-readDirectory(inbox)
-    .then(files => {
-        for (let file of files) {
-            readDataFromFile(file)
-                .then(writeDataFromInbox())
-        }
-    })
-    .then(res => console.log(res))
-    .catch(error => console.log(error))
+async function readWriteRevert() {
+    try {
+        let directory = await readDirectory(inbox);
+        let data = await readDataFromFile(directory);
+        let success = await writeDataFromInbox(directory, data);
+        console.log(success);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+readWriteRevert();
